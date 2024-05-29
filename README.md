@@ -24,7 +24,7 @@ You can install Barn using Homebrew. Follow these steps:
 
 To start the Barn server, run:
 ```sh
-barn serve --address 127.0.0.1:8000
+./barn serve --address 127.0.0.1:8000
 ```
 
 ### Tokenize Data
@@ -43,33 +43,35 @@ Replace the items and fields above with your actual data and fields.
 
 ### Example Workflow
 
-1. Start the server:
-```sh
-./barn serve --address 127.0.0.1:8000
-```
-2. Tokenize data:
-```sh
-./barn tokenize --data item1
-```
+1. **Start the Server**:
+    ```sh
+    ./barn serve --address 127.0.0.1:8000
+    ```
 
-Example response:
-```json
-{
+2. **Tokenize Data**:
+    ```sh
+    ./barn tokenize --data item1
+    ```
+
+    Example response:
+    ```json
+    {
       "field1": "item1"
-}
-```
+    }
+    ```
 
-3. Detokenize data:
-```sh
-./barn detokenize --data field1
-```
+3. **Detokenize Data**:
+    ```sh
+    ./barn detokenize --data field1
+    ```
 
-Example response:
-```json
-[
-  "item1"
-]
-```
+    Example response:
+    ```json
+    [
+      "item1"
+    ]
+    ```
+
 
 ### License
 This project is licensed under the MIT License.
