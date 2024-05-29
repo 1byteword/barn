@@ -1,0 +1,32 @@
+# exclude any binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# result
+*.out
+*.app
+
+# logging
+*.log
+
+# rust specific files
+/target/
+**/*.rs.bk
+
+# cargo files
+Cargo.lock
+Cargo.toml.orig
+
+# VS Code
+.vscode/
+
+.idea/
+*.swp
+*.swo
+*~
+
+# Node dependencies
+node_modules/
