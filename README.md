@@ -1,7 +1,7 @@
 # Barn
 
 <p align="center">
-  <img src="barn.png" alt="Barn Logo" />
+  <img src="misc/barn.png" alt="Barn Logo" />
 </p>
 
 ## About
