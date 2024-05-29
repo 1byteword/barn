@@ -1,5 +1,9 @@
 # Barn
 
+<p align="center">
+  <img src="barn.png" alt="Barn Logo" />
+</p>
+
 ## About
 
 Barn is a CLI tool for managing tokenization and detokenization of data through a simple HTTP API server. It provides a convenient way to tokenize data and later retrieve the original data using unique tokens.
