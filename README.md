@@ -76,6 +76,13 @@ Replace the items and fields above with your actual data and fields.
     ]
     ```
 
+### Viewing Logs
+
+To view detailed logs of tokenization and detokenization activities, set the `RUST_LOG` environment variable to `info` before starting the server:
+
+```sh
+RUST_LOG=info ./barn serve --address 127.0.0.1:8000
+```
 
 # License
 This project is licensed under the MIT License.
