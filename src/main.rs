@@ -16,7 +16,7 @@ use access_control::AccessControl;
 use uuid::Uuid;
 use std::fs;
 use std::fs::File;
-use std::io::{self, Write, Read};
+use std::io::{Write, Read};
 
 const USER_ID_FILE: &str = "user_id.txt";
 const KEY_FILE: &str = "encryption_key.bin";
@@ -84,7 +84,6 @@ async fn main() -> std::io::Result<()> {
     let user_id = get_or_create_user_id();
     let key = get_or_create_key();
 
-    // Initialize AccessControl
     let mut access_control = AccessControl::new();
     access_control.grant_access(user_id, format!("{}/my_secret_document.txt", base_dir));
 
@@ -113,6 +112,7 @@ async fn main() -> std::io::Result<()> {
             save_to_file(&path, &encrypted_data).unwrap();
             access_control.grant_access(user_id, path.clone());
 
+            info!("Tokenized data and saved to {}", path);
             println!("Your data has been tokenized and saved to {}", path);
             Ok(())
         }
@@ -122,7 +122,9 @@ async fn main() -> std::io::Result<()> {
                 let loaded_data = load_from_file(&path).unwrap();
                 match decrypt(&loaded_data, &key) {
                     Ok(decrypted_data) => {
-                        println!("Decrypted data: {:?}", String::from_utf8(decrypted_data).unwrap());
+                        let decrypted_str = String::from_utf8(decrypted_data.clone()).unwrap();
+                        info!("Detokenized data: {:?}", decrypted_str);
+                        println!("Decrypted data: {:?}", decrypted_str);
                     }
                     Err(e) => {
                         println!("Failed to decrypt data: {}", e);

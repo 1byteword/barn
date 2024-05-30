@@ -1,62 +1,56 @@
 use actix_web::{post, web, HttpResponse, Responder};
+use serde::Deserialize;
 use std::sync::Mutex;
 use std::collections::HashMap;
-use crate::models::{RequestData, TokenizedResponse, DetokenizedResponse};
-use log::{info, error};
+use log::info;
+
+#[derive(Deserialize)]
+struct TokenizeRequest {
+    data: Vec<String>,
+}
+
+#[derive(Deserialize)]
+struct DetokenizeRequest {
+    data: Vec<String>,
+}
 
 pub struct AppState {
     pub tokens: Mutex<HashMap<String, String>>,
 }
 
 #[post("/tokenize")]
-async fn tokenize(data: web::Json<RequestData>, state: web::Data<AppState>) -> impl Responder {
-    info!("Received tokenize request: {:?}", data);
-
-    let mut tokens = match state.tokens.lock() {
-        Ok(t) => t,
-        Err(err) => {
-            error!("Failed to acquire lock: {:?}", err);
-            return HttpResponse::InternalServerError().body("Internal Server Error");
-        }
-    };
+async fn tokenize(state: web::Data<AppState>, req: web::Json<TokenizeRequest>) -> impl Responder {
+    let mut tokens = state.tokens.lock().unwrap();
+    let mut i = 1;
+    let mut response = HashMap::new();
     
-    for (i, item) in data.data.iter().enumerate() {
-        tokens.insert(format!("field{}", i + 1), item.clone());
+    for item in &req.data {
+        let key = format!("field{}", i);
+        tokens.insert(key.clone(), item.clone());
+        response.insert(key, item.clone());
+        i += 1;
     }
-
-    let response = TokenizedResponse {
-        tokens: tokens.clone(),
-    };
-
-    info!("Tokenize response: {:?}", response);
+    
+    info!("Tokenized data: {:?}", response);
     HttpResponse::Ok().json(response)
 }
 
 #[post("/detokenize")]
-async fn detokenize(data: web::Json<RequestData>, state: web::Data<AppState>) -> impl Responder {
-    info!("Received detokenize request: {:?}", data);
-
-    let tokens = match state.tokens.lock() {
-        Ok(t) => t,
-        Err(err) => {
-            error!("Failed to acquire lock: {:?}", err);
-            return HttpResponse::InternalServerError().body("Internal Server Error");
-        }
-    };
-
+async fn detokenize(state: web::Data<AppState>, req: web::Json<DetokenizeRequest>) -> impl Responder {
+    let tokens = state.tokens.lock().unwrap();
     let mut response = Vec::new();
-
-    for (i, item) in data.data.iter().enumerate() {
-        let key = format!("field{}", i + 1);
-        if let Some(value) = tokens.get(&key) {
-            response.push(value.clone());
+    let mut i = 1;
+    
+    for item in &req.data {
+        let key = format!("field{}", i);
+        if let Some(token) = tokens.get(&key) {
+            response.push(token.clone());
         } else {
             response.push(format!("{} (not found)", item));
         }
+        i += 1;
     }
-
-    let response = DetokenizedResponse { response };
-
-    info!("Detokenize response: {:?}", response);
+    
+    info!("Detokenized data: {:?}", response);
     HttpResponse::Ok().json(response)
 }
