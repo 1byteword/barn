@@ -15,7 +15,7 @@ pub fn load_from_file(path: &str) -> std::io::Result<Vec<u8>> {
     Ok(data)
 }
 
-pub fn ensure_directory_exists(path: &str) -> std::io::Result<()> {
+pub fn ensure_dir_exists(path: &str) -> std::io::Result<()> {
     if !Path::new(path).exists() {
         fs::create_dir_all(path)?;
     }
