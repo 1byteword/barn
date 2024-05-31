@@ -6,11 +6,11 @@ pub struct RequestData {
 }
 
 #[derive(Serialize, Debug)]
-pub struct TokenizedResponse {
+pub struct LoadRequest {
     pub tokens: std::collections::HashMap<String, String>,
 }
 
 #[derive(Serialize, Debug)]
-pub struct DetokenizedResponse {
+pub struct StoreRequest {
     pub response: Vec<String>,
 }

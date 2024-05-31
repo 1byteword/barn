@@ -7,7 +7,7 @@ mod access_control;
 use actix_web::{App, HttpServer, web};
 use std::sync::Mutex;
 use std::collections::HashMap;
-use handlers::{tokenize, detokenize, AppState};
+use handlers::{store, load, AppState};
 use log::info;
 use clap::{Parser, Subcommand};
 use storage::{ensure_dir_exists, save_to_file, load_from_file};
@@ -22,7 +22,7 @@ const USER_ID_FILE: &str = "user_id.txt";
 const KEY_FILE: &str = "encryption_key.bin";
 
 #[derive(Parser, Debug)]
-#[clap(author, version, about, long_about = "This is a simple API server that tokenizes and detokenizes data.")]
+#[clap(author, version, about, long_about = "This is a simple API server that securely stores and loads data.")]
 struct Args {
     #[clap(subcommand)]
     command: Command,
@@ -37,13 +37,13 @@ enum Command {
     },
 
     // data tokenizer
-    Tokenize {
+    Store {
         #[clap(short, long)]
         data: Vec<String>,
     },
 
     // data detokenizer
-    Detokenize {
+    Load {
         #[clap(short, long)]
         data: Vec<String>,
     },
@@ -98,15 +98,15 @@ async fn main() -> std::io::Result<()> {
             HttpServer::new(move || {
                 App::new()
                     .app_data(app_state.clone())
-                    .service(tokenize)
-                    .service(detokenize)
+                    .service(store)
+                    .service(load)
             })
             .bind(&address)?
             .run()
             .await
         }
 
-        Command::Tokenize { data } => {
+        Command::Store { data } => {
             let data_str = data.join(" ");
             let encrypted_data = encrypt(data_str.as_bytes(), &key);
             save_to_file(&path, &encrypted_data).unwrap();
@@ -117,14 +117,14 @@ async fn main() -> std::io::Result<()> {
             Ok(())
         }
 
-        Command::Detokenize { data: _ } => {
+        Command::Load { data: _ } => {
             if access_control.has_access(user_id, path.as_str()) {
                 let loaded_data = load_from_file(&path).unwrap();
                 match decrypt(&loaded_data, &key) {
                     Ok(decrypted_data) => {
                         let decrypted_str = String::from_utf8(decrypted_data.clone()).unwrap();
-                        info!("Detokenized data: {:?}", decrypted_str);
-                        println!("Decrypted data: {:?}", decrypted_str);
+                        info!("Retrieved data: {:?}", decrypted_str);
+                        println!("Decrypted retrieved data: {:?}", decrypted_str);
                     }
                     Err(e) => {
                         println!("Failed to decrypt data: {}", e);

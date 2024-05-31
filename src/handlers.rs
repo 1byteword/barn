@@ -5,12 +5,12 @@ use std::collections::HashMap;
 use log::info;
 
 #[derive(Deserialize)]
-struct TokenizeRequest {
+struct StoreRequest {
     data: Vec<String>,
 }
 
 #[derive(Deserialize)]
-struct DetokenizeRequest {
+struct LoadRequest {
     data: Vec<String>,
 }
 
@@ -18,8 +18,8 @@ pub struct AppState {
     pub tokens: Mutex<HashMap<String, String>>,
 }
 
-#[post("/tokenize")]
-async fn tokenize(state: web::Data<AppState>, req: web::Json<TokenizeRequest>) -> impl Responder {
+#[post("/store")]
+async fn store(state: web::Data<AppState>, req: web::Json<StoreRequest>) -> impl Responder {
     let mut tokens = state.tokens.lock().unwrap();
     let mut i = 1;
     let mut response = HashMap::new();
@@ -31,12 +31,12 @@ async fn tokenize(state: web::Data<AppState>, req: web::Json<TokenizeRequest>) -
         i += 1;
     }
     
-    info!("Tokenized data: {:?}", response);
+    info!("Encrypted data: {:?}", response);
     HttpResponse::Ok().json(response)
 }
 
-#[post("/detokenize")]
-async fn detokenize(state: web::Data<AppState>, req: web::Json<DetokenizeRequest>) -> impl Responder {
+#[post("/load")]
+async fn load(state: web::Data<AppState>, req: web::Json<LoadRequest>) -> impl Responder {
     let tokens = state.tokens.lock().unwrap();
     let mut response = Vec::new();
     let mut i = 1;
@@ -51,6 +51,6 @@ async fn detokenize(state: web::Data<AppState>, req: web::Json<DetokenizeRequest
         i += 1;
     }
     
-    info!("Detokenized data: {:?}", response);
+    info!("Decrypted retrieved data: {:?}", response);
     HttpResponse::Ok().json(response)
 }
