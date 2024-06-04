@@ -1,46 +1,42 @@
-use actix_web::{post, web, HttpResponse, Responder};
-use serde::Deserialize;
+use actix_web::{web, HttpResponse, Responder};
+use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
 use std::collections::HashMap;
-use log::info;
-
-#[derive(Deserialize)]
-struct StoreRequest {
-    data: Vec<String>,
-}
-
-#[derive(Deserialize)]
-struct LoadRequest {
-    data: Vec<String>,
-}
 
 pub struct AppState {
     pub tokens: Mutex<HashMap<String, String>>,
 }
 
-#[post("/store")]
-async fn store(state: web::Data<AppState>, req: web::Json<StoreRequest>) -> impl Responder {
+#[derive(Deserialize)]
+pub struct StoreRequest {
+    data: Vec<String>,
+}
+
+#[derive(Deserialize)]
+pub struct LoadRequest {
+    data: Vec<String>,
+}
+
+pub async fn store(state: web::Data<AppState>, req: web::Json<StoreRequest>) -> impl Responder {
     let mut tokens = state.tokens.lock().unwrap();
-    let mut i = 1;
     let mut response = HashMap::new();
-    
+    let mut i = 1;
+
     for item in &req.data {
         let key = format!("field{}", i);
         tokens.insert(key.clone(), item.clone());
         response.insert(key, item.clone());
         i += 1;
     }
-    
-    info!("Encrypted data: {:?}", response);
+
     HttpResponse::Ok().json(response)
 }
 
-#[post("/load")]
-async fn load(state: web::Data<AppState>, req: web::Json<LoadRequest>) -> impl Responder {
+pub async fn load(state: web::Data<AppState>, req: web::Json<LoadRequest>) -> impl Responder {
     let tokens = state.tokens.lock().unwrap();
     let mut response = Vec::new();
     let mut i = 1;
-    
+
     for item in &req.data {
         let key = format!("field{}", i);
         if let Some(token) = tokens.get(&key) {
@@ -50,7 +46,6 @@ async fn load(state: web::Data<AppState>, req: web::Json<LoadRequest>) -> impl R
         }
         i += 1;
     }
-    
-    info!("Decrypted retrieved data: {:?}", response);
+
     HttpResponse::Ok().json(response)
 }

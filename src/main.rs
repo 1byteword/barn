@@ -4,7 +4,7 @@ mod storage;
 mod encryption;
 mod access_control;
 
-use actix_web::{App, HttpServer, web};
+use actix_web::{App, HttpServer, HttpResponse, Responder, web};
 use std::sync::Mutex;
 use std::collections::HashMap;
 use handlers::{store, load, AppState};
@@ -18,6 +18,8 @@ use std::fs;
 use std::fs::File;
 use std::io::{Write, Read};
 
+use bcrypt::{hash, verify, DEFAULT_COST};
+
 const USER_ID_FILE: &str = "user_id.txt";
 const KEY_FILE: &str = "encryption_key.bin";
 
@@ -26,6 +28,11 @@ const KEY_FILE: &str = "encryption_key.bin";
 struct Args {
     #[clap(subcommand)]
     command: Command,
+}
+
+struct User {
+    username: String,
+    password_hash: String,
 }
 
 #[derive(Subcommand, Debug)]
@@ -47,6 +54,39 @@ enum Command {
         #[clap(short, long)]
         data: Vec<String>,
     },
+}
+
+fn hash_password(password: &str) -> Result<String, bcrypt::BcryptError> {
+    hash(password, DEFAULT_COST)
+}
+
+fn register_user(username: String, password: String) -> Result<(), String> {
+    println!("Registering user...");
+    let password_hash = hash_password(&password).map_err(|e| e.to_string())?;
+
+    println!("User {} registered successfully.", username);
+
+    Ok(())
+}
+
+fn authenticate_user(username: &str, password: &str) -> Result<bool, String> {
+    let user = User {
+        username: username.to_string(),
+        password_hash: hash_password(password).unwrap(),
+    };
+
+    match verify(password, &user.password_hash) {
+        Ok(matching) => Ok(matching),
+        Err(e) => Err(e.to_string()),
+    }
+}
+
+async fn login(info: web::Json<User>) -> impl Responder {
+    if authenticate_user(&info.username, &info.password_hash).unwrap_or(false) {
+        HttpResponse::Ok().body("Login successful")
+    } else {
+        HttpResponse::BadRequest().body("Login failed. Invalid username or password.")
+    }
 }
 
 fn get_or_create_user_id() -> Uuid {
@@ -91,17 +131,17 @@ async fn main() -> std::io::Result<()> {
 
     match args.command {
         Command::Serve { address } => {
-            let app_state = web::Data::new(AppState {
-                tokens: Mutex::new(HashMap::new()),
+            let app_data = web::Data::new(AppState {
+                tokens: Mutex::new(std::collections::HashMap::new()),
             });
-
+        
             HttpServer::new(move || {
                 App::new()
-                    .app_data(app_state.clone())
-                    .service(store)
-                    .service(load)
+                    .app_data(app_data.clone())
+                    .service(web::resource("/store").route(web::post().to(store)))
+                    .service(web::resource("/load").route(web::post().to(load)))
             })
-            .bind(&address)?
+            .bind("127.0.0.1:8080")?
             .run()
             .await
         }
