@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { Input } from "@/components/ui/input"
 
-export function barn-home() {
+export function barnhome() {
   return (
     <div className="flex h-screen bg-gray-100">
       <nav className="flex flex-col w-64 h-full px-4 py-8 bg-gray-900 border-r">
