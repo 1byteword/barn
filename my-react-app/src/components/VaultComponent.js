@@ -9,7 +9,7 @@ export default function VaultComponent() {
       <nav className="w-64 flex-shrink-0 bg-black p-4">
         <div className="flex items-center space-x-2 text-white mb-6">
           <VaultIcon className="h-8 w-8" />
-          <span className="font-medium text-xl">Vault</span>
+          <span className="font-medium text-xl">Barn</span>
         </div>
         <ul className="space-y-2">
           <li>
@@ -34,12 +34,12 @@ export default function VaultComponent() {
             <Button className="w-full text-left text-white">Client Count</Button>
           </li>
           <li>
-            <Button className="w-full text-left text-white">Seal Vault</Button>
+            <Button className="w-full text-left text-white">Lock Barndoors</Button>
           </li>
         </ul>
       </nav>
       <div className="flex-1 p-10">
-        <h1 className="text-3xl font-bold mb-8">Vault v1.16.3</h1>
+        <h1 className="text-3xl font-bold mb-8">Barn v0.0.3</h1>
         <div className="grid grid-cols-3 gap-8">
           <div className="col-span-2">
             <div className="bg-white p-6 rounded-lg shadow mb-8">
