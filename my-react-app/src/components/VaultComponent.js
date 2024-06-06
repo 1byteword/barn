@@ -73,9 +73,10 @@ export default function VaultComponent() {
                       </p>
                     </div>
                   </div>
+
                   <Button
                     variant="outline"
-                    className="ml-auto bg-[#f0f0f0] text-[#666] hover:bg-[#e0e0e0] dark:bg-[#2a2a2a] dark:text-[#b3b3b3] dark:hover:bg-[#333]"
+                    className="ml-auto bg-[#6b705c] text-[#f5f5f5] hover:bg-[#8a9470] dark:bg-[#a7a59b] dark:text-[#1a1a1a] dark:hover:bg-[#92967e]"
                   >
                     View
                   </Button>
@@ -88,9 +89,10 @@ export default function VaultComponent() {
                       <p className="text-sm text-[#666] dark:text-[#b3b3b3]">kv_39fa3b1e key/value secret storage</p>
                     </div>
                   </div>
+                  
                   <Button
                     variant="outline"
-                    className="ml-auto bg-[#f0f0f0] text-[#666] hover:bg-[#e0e0e0] dark:bg-[#2a2a2a] dark:text-[#b3b3b3] dark:hover:bg-[#333]"
+                    className="ml-auto bg-[#6b705c] text-[#f5f5f5] hover:bg-[#8a9470] dark:bg-[#a7a59b] dark:text-[#1a1a1a] dark:hover:bg-[#92967e]"
                   >
                     View
                   </Button>
@@ -120,10 +122,10 @@ export default function VaultComponent() {
               </p>
               <Input
                 placeholder="Type to select a mount"
-                className="mt-4 bg-[#f0f0f0] dark:bg-[#2a2a2a] text-[#333] dark:text-[#e6e6e6]"
+                className="mt-4 bg-[#d3d3c3] text-[#333] dark:bg-[#3a3a3a] dark:text-[#e6e6e6] border border-[#6b705c] dark:border-[#a7a59b]"
               />
               <div className="mt-4 p-4 bg-[#f0f0f0] dark:bg-[#2a2a2a] rounded-lg text-center">
-                <p className="text-lg font-semibold text-[#333] dark:text-[#e6e6e6]">No mount selected</p>
+                <p className="text-lg font-semibold text-[#333] dark:text-[#969696]">No mount selected</p>
                 <p className="text-sm text-[#666] dark:text-[#b3b3b3] mt-2">Select a mount above to get started.</p>
               </div>
             </div>
