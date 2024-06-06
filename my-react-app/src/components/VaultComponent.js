@@ -22,7 +22,7 @@ export default function VaultComponent() {
               href="#"
               className="mt-1 block rounded px-3 py-2 text-base font-medium text-[#b3b3b3] hover:bg-[#555] hover:text-[#e6e6e6]"
             >
-              Secrets Engines
+              Secret Silos
             </a>
             <a
               href="#"
@@ -61,7 +61,7 @@ export default function VaultComponent() {
         <div className="grid grid-cols-3 gap-8 mt-8">
           <div className="col-span-2">
             <div className="bg-[#fff] dark:bg-[#222] p-6 rounded-lg shadow">
-              <h2 className="text-lg font-semibold text-[#333] dark:text-[#e6e6e6]">Secrets engines</h2>
+              <h2 className="text-lg font-semibold text-[#333] dark:text-[#e6e6e6]">Secrets silos</h2>
               <div className="mt-4">
                 <div className="flex items-center justify-between p-4 bg-[#f0f0f0] dark:bg-[#2a2a2a] rounded-lg">
                   <div className="flex items-center">
@@ -118,7 +118,7 @@ export default function VaultComponent() {
             <div className="bg-[#fff] dark:bg-[#222] p-6 rounded-lg shadow">
               <h2 className="text-lg font-semibold text-[#333] dark:text-[#e6e6e6]">Quick actions</h2>
               <p className="text-sm text-[#666] dark:text-[#b3b3b3] mt-1">
-                Supported engines include databases, KV version 2, and PKI.
+                Supported silos include KV.
               </p>
               <Input
                 placeholder="Type to select a mount"
