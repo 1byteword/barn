@@ -24,6 +24,8 @@ You can install Barn using Homebrew. Follow these steps:
 
 ## Usage
 
+<img src="misc/home.png" alt="Barnyard Home" />
+
 ### Start the Server
 
 To start the Barn server, run:
