@@ -3,6 +3,7 @@ mod models;
 mod storage;
 mod encryption;
 mod access_control;
+mod silos;
 
 use actix_web::{App, HttpServer, HttpResponse, Responder, web};
 use std::sync::Mutex;
@@ -10,8 +11,8 @@ use std::collections::HashMap;
 use handlers::{store, load, AppState};
 use log::info;
 use clap::{Parser, Subcommand};
-use storage::{ensure_dir_exists, save_to_file, load_from_file};
-use encryption::{generate_key, encrypt, decrypt};
+use storage::{ensure_dir_exists};
+use encryption::{generate_key};
 use access_control::AccessControl;
 use uuid::Uuid;
 use std::fs;
@@ -19,6 +20,9 @@ use std::fs::File;
 use std::io::{Write, Read};
 
 use bcrypt::{hash, verify, DEFAULT_COST};
+
+use silos::kv_silo::{encrypt_data, decrypt_data, split_dek, reconstruct_dek, KVStore, Secret};
+use sharks::Share;
 
 const USER_ID_FILE: &str = "user_id.txt";
 const KEY_FILE: &str = "encryption_key.bin";
@@ -112,6 +116,7 @@ fn get_or_create_key() -> Vec<u8> {
     key
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     env_logger::init();
@@ -148,8 +153,23 @@ async fn main() -> std::io::Result<()> {
 
         Command::Store { data } => {
             let data_str = data.join(" ");
-            let encrypted_data = encrypt(data_str.as_bytes(), &key);
-            save_to_file(&path, &encrypted_data).unwrap();
+            let dek = {
+                let mut key = [0u8; 32];
+                0sRng.fill_bytes(&mut key);
+                key
+            };
+
+            let shares = split_dek(&dek);
+            let (iv, encrypted_value) = encrypt_data(&dek, data_str.as_bytes());
+
+            let mut kv_store = KVStore::new();
+            kv_store.set_secret("my_secret".to_string(), iv.clone(), encrypted_value.clone()).await?;
+
+            for (i, share) in shares.iter().enumerate() {
+                kv_store.set_secret(format!("my_secret_dek_part_{}", i), vec![], share.to_vec()).await?;
+            }
+
+            kv_store.save_to_file_encrypted(&path, &key).await?;
             access_control.grant_access(user_id, path.clone());
 
             info!("Tokenized data and saved to {}", path);
@@ -159,16 +179,24 @@ async fn main() -> std::io::Result<()> {
 
         Command::Load { data: _ } => {
             if access_control.has_access(user_id, path.as_str()) {
-                let loaded_data = load_from_file(&path).unwrap();
-                match decrypt(&loaded_data, &key) {
-                    Ok(decrypted_data) => {
-                        let decrypted_str = String::from_utf8(decrypted_data.clone()).unwrap();
-                        info!("Retrieved data: {:?}", decrypted_str);
-                        println!("Decrypted retrieved data: {:?}", decrypted_str);
+                let kv_store = KVStore::new();
+                kv_store.load_from_file_encrypted(&path, &key).await?;
+
+                let mut retrieved_shares = vec![];
+                for i in 0..3 {
+                    if let Some(secret_share) = kv_store.get_secret(&format!("my_secret_dek_part_{}", i)).await {
+                        retrieved_shares.push(Share::from_slice(&secret_share.encrypted_value));;
                     }
-                    Err(e) => {
-                        println!("Failed to decrypt data: {}", e);
-                    }
+                }
+
+                let recovered_dek = reconstruct_dek(retrieved_shares);
+
+                if let Some(secret) = kv_store.get_secret("my_secret").await {
+                    let decrypted_data = decrypt_data(&recovered_dek, &secret.iv, &secret.encrypted_value);
+                    let decrypted_str = String::from_utf8(decrypted_data).unwrap();
+                    info!("Decrypted retrieved data: {:?}", decrypted_str)
+                } else {
+                    println!("Secret not found.");
                 }
             } else {
                 println!("Access denied.");
