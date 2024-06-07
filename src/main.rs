@@ -22,13 +22,16 @@ use std::io::{Write, Read};
 use bcrypt::{hash, verify, DEFAULT_COST};
 
 use silos::kv_silo::{encrypt_data, decrypt_data, split_dek, reconstruct_dek, KVStore, Secret};
+use crate::silos::kv_silo::ShareSerialization;
 use sharks::Share;
+use rand::rngs::OsRng;
+use rand::RngCore;
 
 const USER_ID_FILE: &str = "user_id.txt";
 const KEY_FILE: &str = "encryption_key.bin";
 
 #[derive(Parser, Debug)]
-#[clap(author, version, about, long_about = "This is a simple API server that securely stores and loads data.")]
+#[clap(author, version, about, long_about = "API Server to encrypt, store, and retrieve data.")]
 struct Args {
     #[clap(subcommand)]
     command: Command,
@@ -42,18 +45,15 @@ struct User {
 #[derive(Subcommand, Debug)]
 enum Command {
     Serve {
-        // bind server
         #[clap(short, long, default_value = "127.0.0.1:8000")]
         address: String,
     },
 
-    // data tokenizer
     Store {
         #[clap(short, long)]
         data: Vec<String>,
     },
 
-    // data detokenizer
     Load {
         #[clap(short, long)]
         data: Vec<String>,
@@ -67,9 +67,7 @@ fn hash_password(password: &str) -> Result<String, bcrypt::BcryptError> {
 fn register_user(username: String, password: String) -> Result<(), String> {
     println!("Registering user...");
     let password_hash = hash_password(&password).map_err(|e| e.to_string())?;
-
     println!("User {} registered successfully.", username);
-
     Ok(())
 }
 
@@ -78,7 +76,6 @@ fn authenticate_user(username: &str, password: &str) -> Result<bool, String> {
         username: username.to_string(),
         password_hash: hash_password(password).unwrap(),
     };
-
     match verify(password, &user.password_hash) {
         Ok(matching) => Ok(matching),
         Err(e) => Err(e.to_string()),
@@ -116,7 +113,6 @@ fn get_or_create_key() -> Vec<u8> {
     key
 }
 
-// ---------------------------------------------------------------------------------------------------------------------
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     env_logger::init();
@@ -139,14 +135,14 @@ async fn main() -> std::io::Result<()> {
             let app_data = web::Data::new(AppState {
                 tokens: Mutex::new(std::collections::HashMap::new()),
             });
-        
+
             HttpServer::new(move || {
                 App::new()
                     .app_data(app_data.clone())
                     .service(web::resource("/store").route(web::post().to(store)))
                     .service(web::resource("/load").route(web::post().to(load)))
             })
-            .bind("127.0.0.1:8080")?
+            .bind(address)?
             .run()
             .await
         }
@@ -155,18 +151,19 @@ async fn main() -> std::io::Result<()> {
             let data_str = data.join(" ");
             let dek = {
                 let mut key = [0u8; 32];
-                0sRng.fill_bytes(&mut key);
+                OsRng.fill_bytes(&mut key);
                 key
             };
 
             let shares = split_dek(&dek);
             let (iv, encrypted_value) = encrypt_data(&dek, data_str.as_bytes());
 
-            let mut kv_store = KVStore::new();
+            let kv_store = KVStore::new();
             kv_store.set_secret("my_secret".to_string(), iv.clone(), encrypted_value.clone()).await?;
 
             for (i, share) in shares.iter().enumerate() {
-                kv_store.set_secret(format!("my_secret_dek_part_{}", i), vec![], share.to_vec()).await?;
+                let share_bytes = share.to_bytes();
+                kv_store.set_secret(format!("my_secret_dek_part_{}", i), vec![], share_bytes).await?;
             }
 
             kv_store.save_to_file_encrypted(&path, &key).await?;
@@ -185,16 +182,18 @@ async fn main() -> std::io::Result<()> {
                 let mut retrieved_shares = vec![];
                 for i in 0..3 {
                     if let Some(secret_share) = kv_store.get_secret(&format!("my_secret_dek_part_{}", i)).await {
-                        retrieved_shares.push(Share::from_slice(&secret_share.encrypted_value));;
+                        let share = Share::from_bytes(&secret_share.encrypted_value);
+                        retrieved_shares.push(share);
                     }
                 }
 
                 let recovered_dek = reconstruct_dek(retrieved_shares);
 
                 if let Some(secret) = kv_store.get_secret("my_secret").await {
-                    let decrypted_data = decrypt_data(&recovered_dek, &secret.iv, &secret.encrypted_value);
-                    let decrypted_str = String::from_utf8(decrypted_data).unwrap();
-                    info!("Decrypted retrieved data: {:?}", decrypted_str)
+                    let decrypted_value = decrypt_data(&recovered_dek, &secret.iv, &secret.encrypted_value);
+                    let decrypted_str = String::from_utf8(decrypted_value).unwrap();
+                    info!("Decrypted retrieved data: {:?}", decrypted_str);
+                    println!("Decrypted retrieved data: {:?}", decrypted_str);
                 } else {
                     println!("Secret not found.");
                 }
