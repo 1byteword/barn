@@ -100,26 +100,3 @@ pub fn reconstruct_dek(shares: Vec<Share>) -> Vec<u8> {
     let sharks = Sharks(3);
     sharks.recover(&shares).expect("Failed to recover DEK")
 }
-
-pub trait ShareSerialization {
-    fn to_bytes(&self) -> Vec<u8>;
-    fn from_bytes(bytes: &[u8]) -> Result<Share, String>;
-}
-
-impl ShareSerialization for Share {
-    fn to_bytes(&self) -> Vec<u8> {
-        let mut bytes = Vec::new();
-        bytes.push(self.x.to_u8()); // This assumes GF256 has a to_u8() method.
-        bytes.extend(self.y.iter().map(|&gf| gf.to_u8())); // Similarly, assuming a to_u8() method exists.
-        bytes
-    }
-
-    fn from_bytes(bytes: &[u8]) -> Result<Share, String> {
-        if bytes.len() < 1 + 1 { // Change according to actual size requirements.
-            return Err("Not enough data to form a Share".to_string());
-        }
-        let x = GF256::from_u8(bytes[0]); // Assuming a from_u8() method exists.
-        let y = bytes[1..].iter().map(|&b| GF256::from_u8(b)).collect();
-        Ok(Share { x, y }) // Assuming Share can be constructed directly.
-    }
-}
