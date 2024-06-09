@@ -1,24 +1,11 @@
-/**
- * shamir.rs
- * 
- * This file contains a custom implementation of Shamir's Secret Sharing algorithm.
- * 
- * https://en.wikipedia.org/wiki/Shamir%27s_secret_sharing
- * 
- * Author: Azhan Khan 
- * Email: 1byteword [ AT ] gmail.com
- * Date: 06-08-2024
- */
-
 use num_bigint::{BigInt, ToBigInt};
 use num_traits::{One, Zero};
 use std::str::FromStr;
 use rand::Rng;
 
-// 12th mersenne prime, biggest I could find under 100 digits
+// 12th Mersenne prime
 pub const PRIME: &str = "170141183460469231731687303715884105727";
 
-// using Horner's method https://en.wikipedia.org/wiki/Horner%27s_method
 fn eval_at(poly: &[BigInt], x: &BigInt, prime: &BigInt) -> BigInt {
     let mut accum = BigInt::zero();
     for coeff in poly.iter().rev() {
@@ -26,21 +13,32 @@ fn eval_at(poly: &[BigInt], x: &BigInt, prime: &BigInt) -> BigInt {
         accum += coeff;
         accum %= prime;
     }
-
     accum
 }
 
-pub fn make_random_shares(secret: i64, minimum: usize, shares: usize, prime: &BigInt) {
+fn gen_bigint_below(rng: &mut rand::rngs::ThreadRng, upper: &BigInt) -> BigInt {
+    let mut result = BigInt::zero();
+    let bits = upper.bits() as usize;
+    while result >= *upper || result.is_zero() {
+        let bytes = (bits + 7) / 8;
+        let mut v = vec![0u8; bytes];
+        rng.fill(&mut v[..]);
+        result = BigInt::from_bytes_le(num_bigint::Sign::Plus, &v);
+    }
+    result
+}
+
+pub fn make_random_shares(secret: i64, minimum: usize, shares: usize, prime: &BigInt) -> Vec<(BigInt, BigInt)> {
     let mut rng = rand::thread_rng();
-    let secret_bigint = secret.to_bigint().unwrap();
+    let secret_bigint = BigInt::from(secret);
     let mut poly = vec![secret_bigint];
 
     for _ in 1..minimum {
-        poly.push(rng.gen_bigint_below(prime));
+        poly.push(gen_bigint_below(&mut rng, prime));
     }
 
     let points: Vec<(BigInt, BigInt)> = (1..=shares).map(|i| {
-        let x = i.to_bigint().unwrap();
+        let x = BigInt::from(i);
         let y = eval_at(&poly, &x, prime);
         (x, y)
     }).collect();
@@ -64,7 +62,7 @@ fn lagrange_interpolate(x: BigInt, x_s: &[BigInt], y_s: &[BigInt], prime: &BigIn
                 continue;
             }
             let num = &x - &x_s[j];
-            let denom = &x_s[i] - &y_s[j];
+            let denom = &x_s[i] - &x_s[j];
             terms = terms * &num * mod_inv(&denom, prime) % prime;
         }
         result = (result + terms) % prime;
