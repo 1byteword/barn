@@ -1,0 +1,11 @@
+[package]
+name = "sss_test"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+shamirsecretsharing = "0.1"
+
+[[bin]]
+name = "sss"
+path = "sss_test.rs"

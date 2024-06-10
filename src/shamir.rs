@@ -3,7 +3,7 @@ use num_traits::{One, Zero};
 use std::str::FromStr;
 use rand::Rng;
 
-// 12th Mersenne prime
+// 12th Mersenne prime, biggest prime less than 100 digits
 pub const PRIME: &str = "170141183460469231731687303715884105727";
 
 fn eval_at(poly: &[BigInt], x: &BigInt, prime: &BigInt) -> BigInt {
@@ -86,4 +86,49 @@ fn mod_inv(a: &BigInt, p: &BigInt) -> BigInt {
     }
 
     xy.0
+}
+
+fn main() {
+    let prime = BigInt::from_str(PRIME).unwrap();
+    let secret = "Azhan is cool!";
+
+    // Convert the secret string to a BigInt
+    let secret_bytes = secret.as_bytes();
+    let secret_bigint = BigInt::from_bytes_le(num_bigint::Sign::Plus, secret_bytes);
+
+    let minimum = 3;
+    let shares = 5;
+
+    let shares = make_random_shares(&secret_bigint, minimum, shares, &prime);
+    
+    println!("Shares:");
+    for (i, share) in shares.iter().enumerate() {
+        println!("Share {}: {:?}", i + 1, share);
+    }
+
+    let mut input_shares = Vec::new();
+    for mut i in 1..=3 {
+        print!("Enter share {}:", i);
+        io::stdout().flush().unwrap();
+
+        let mut share_input = String::new();
+        io::stdin().read_line(&mut share_input).unwrap();
+        let parts: Vec<&str> = share_input.trim().split_whitespace().collect();
+
+        if parts.len() == 2 {
+            let x = BigInt::from_str(parts[0]).unwrap();
+            let y = BigInt::from_str(parts[1]).unwrap();
+            input_shares.push((x, y));
+        } else {
+            println!("Invalid input. Please enter the share in format x y");
+            i -= 1;
+        }
+    }
+
+    let secret_reconstructed_bigint = reconstruct_secret(&input_shares, &prime);
+
+    let secret_reconstructed_bytes = secret_reconstructed_bigint.to_bytes_le().1;
+    let secret_reconstructed = String::from_utf8(secret_reconstructed_bytes).unwrap();
+
+    println!("Reconstructed secret: {}", secret_reconstructed);
 }

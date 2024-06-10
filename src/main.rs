@@ -4,9 +4,8 @@ mod storage;
 mod encryption;
 mod access_control;
 mod kv_silo;
-mod shamir;
 
-use actix_web::{App, HttpServer, HttpResponse, Responder, web};
+use actix_web::{App, HttpServer, web};
 use std::sync::Mutex;
 use std::collections::HashMap;
 use once_cell::sync::Lazy;
@@ -20,15 +19,11 @@ use uuid::Uuid;
 use std::fs;
 use std::fs::File;
 use std::io::{Write, Read};
-use rand::rngs::OsRng;
-use rand::RngCore;
-use num_bigint::BigInt;
-use num_traits::ToPrimitive;
-use kv_silo::KVStore;
-use shamir::{make_random_shares, reconstruct_secret, PRIME};
+use shamirsecretsharing::*;
 
 const USER_ID_FILE: &str = "user_id.txt";
 const KEY_FILE: &str = "encryption_key.bin";
+const DATA_SIZE: usize = 64;
 
 static DEK_SHARES: Lazy<Mutex<HashMap<String, Vec<Vec<u8>>>>> = Lazy::new(|| {
     Mutex::new(HashMap::new())
@@ -64,37 +59,6 @@ enum Command {
     },
 }
 
-// fn hash_password(password: &str) -> Result<String, bcrypt::BcryptError> {
-//     hash(password, DEFAULT_COST)
-// }
-
-// fn register_user(username: String, password: String) -> Result<(), String> {
-//     println!("Registering user...");
-//     let password_hash = hash_password(&password).map_err(|e| e.to_string())?;
-//     println!("User {} registered successfully.", username);
-//     Ok(())
-// }
-
-// fn authenticate_user(username: &str, password: &str) -> Result<bool, String> {
-//     let user = User {
-//         username: username.to_string(),
-//         password_hash: hash_password(password).unwrap(),
-//     };
-//     match verify(password, &user.password_hash) {
-//         Ok(matching) => Ok(matching),
-//         Err(e) => Err(e.to_string()),
-//     }
-// }
-
-// async fn login(info: web::Json<User>) -> impl Responder {
-//     if authenticate_user(&info.username, &info.password_hash).unwrap_or(false) {
-//         HttpResponse::Ok().body("Login successful")
-//     } else {
-//         HttpResponse::BadRequest().body("Login failed. Invalid username or password.")
-//     }
-// }
-
-
 fn store_share(id: String, share: Vec<u8>) {
     let mut shares_map = DEK_SHARES.lock().unwrap();
     shares_map.entry(id).or_insert_with(Vec::new).push(share);
@@ -118,7 +82,7 @@ fn get_or_create_user_id() -> Uuid {
 
 fn get_or_create_key() -> Vec<u8> {
     if let Ok(mut file) = File::open(KEY_FILE) {
-        let mut key = vec![0; 32];
+        let mut key = vec![0; 32];  // Ensure the key is 32 bytes
         file.read_exact(&mut key).expect("Unable to read key file");
         return key;
     }
@@ -164,26 +128,24 @@ async fn main() -> std::io::Result<()> {
 
         Command::Store { data } => {
             let data_str = data.join(" ");
-            let dek = {
-                let mut key = [0u8; 32];
-                OsRng.fill_bytes(&mut key);
-                BigInt::from_bytes_le(num_bigint::Sign::Plus, &key).to_i64().unwrap()
-            };
+            let mut data_bytes = data_str.as_bytes().to_vec();
+            data_bytes.resize(DATA_SIZE, 0);
 
-            let prime = BigInt::from_str(PRIME).unwrap();
-
-            let shares = make_random_shares(dek, 3, 6, &prime);
+            let shares = create_shares(&data_bytes, 5, 3).unwrap();
             
             println!("Farmer, store these bales in a safe place:");
             for (i, share) in shares.iter().enumerate() {
-                println!("Bale {}: {:?}", i + 1, share);
+                print!("Bale {}: ", i + 1);
+                for byte in share {
+                    print!("{} ", byte);
+                }
+                println!();
             }
 
-            let (iv, encrypted_value) = encrypt(&dek, data_str.as_bytes());
+            let (nonce, encrypted_value) = encrypt(&data_bytes, &key);
 
-            let kv_store = KVStore::new();
-            kv_store.set_secret("my_secret".to_string(), iv.clone(), encrypted_value.clone()).await?;
-
+            let kv_store = kv_silo::KVStore::new();
+            kv_store.set_secret("my_secret".to_string(), nonce.clone(), encrypted_value.clone()).await?;
 
             kv_store.save_to_file_encrypted(&path, &key).await?;
             //access_control.grant_access(user_id, path.clone());
@@ -197,26 +159,20 @@ async fn main() -> std::io::Result<()> {
             let mut input_shares = Vec::new();
 
             for i in 0..3 {
-                println!("Enter Bale {}: (format x y)", i + 1);
+                println!("Enter Bale {}: ", i + 1);
                 let mut share_input = String::new();
                 std::io::stdin().read_line(&mut share_input).unwrap();
-                let parts: Vec<&str> = share_input.trim().split_whitespace().collect();
-
-                if parts.len() == 2 {
-                    let x = BigInt::from_str(parts[0]).unwrap();
-                    let y = BigInt::from_str(parts[1]).unwrap();
-                    input_shares.push((x, y));
-                }
+                let share: Vec<u8> = share_input.trim().split_whitespace().map(|s| s.parse().unwrap()).collect();
+                input_shares.push(share);
             }
 
-            let prime = BigInt::from_str(PRIME).unwrap();
-            let recovered_dek = reconstruct_secret(&input_shares, &prime);
+            let recovered_dek = combine_shares(&input_shares).unwrap().unwrap();
 
-            let kv_store = KVStore::new();
-            kv_store.load_from_file_encrypted(&path, &key).await?;
+            let kv_store = kv_silo::KVStore::new();
+            kv_store.load_from_file_encrypted(&path, &recovered_dek).await?;
 
-            if let Some((iv, encrypted_value)) = kv_store.get_secret("my_secret").await {
-                let decrypted_value = decrypt(&recovered_dek.to_bytes_le().1, &iv, &encrypted_value);
+            if let Some(secret) = kv_store.get_secret("my_secret").await {
+                let decrypted_value = decrypt(&secret.iv, &recovered_dek).expect("Failed to decrypt");
                 let decrypted_str = String::from_utf8(decrypted_value).unwrap();
                 println!("Decrypted value: {}", decrypted_str);
             } else {
