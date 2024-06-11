@@ -7,8 +7,7 @@ mod kv_silo;
 
 use actix_web::{App, HttpServer, web};
 use std::sync::Mutex;
-use std::collections::HashMap;
-use once_cell::sync::Lazy;
+
 use handlers::{store, load, AppState};
 use log::info;
 use clap::{Parser, Subcommand};
@@ -25,20 +24,11 @@ const USER_ID_FILE: &str = "user_id.txt";
 const KEY_FILE: &str = "encryption_key.bin";
 const DATA_SIZE: usize = 64;
 
-static DEK_SHARES: Lazy<Mutex<HashMap<String, Vec<Vec<u8>>>>> = Lazy::new(|| {
-    Mutex::new(HashMap::new())
-});
-
 #[derive(Parser, Debug)]
 #[clap(author, version, about, long_about = "API Server to encrypt, store, and retrieve data.")]
 struct Args {
     #[clap(subcommand)]
     command: Command,
-}
-
-struct User {
-    username: String,
-    password_hash: String,
 }
 
 #[derive(Subcommand, Debug)]
@@ -123,7 +113,7 @@ async fn main() -> std::io::Result<()> {
 
             let shares = create_shares(&data_bytes, 5, 3).unwrap();
             
-            println!("Farmer, store these bales in a safe place:");
+            println!("Store these key shares in a safe place:");
             for (i, share) in shares.iter().enumerate() {
                 print!("Bale {}: ", i + 1);
                 for byte in share {
@@ -138,7 +128,6 @@ async fn main() -> std::io::Result<()> {
             kv_store.set_secret("my_secret".to_string(), nonce.clone(), encrypted_value.clone()).await?;
 
             kv_store.save_to_file_encrypted(&path, &key).await?;
-            //access_control.grant_access(user_id, path.clone());
 
             info!("Tokenized data and saved to {}", path);
             println!("Your data has been tokenized and saved to {}", path);
@@ -157,8 +146,8 @@ async fn main() -> std::io::Result<()> {
             }
 
             let recovered_dek = combine_shares(&input_shares).unwrap().unwrap();
-
             let kv_store = kv_silo::KVStore::new();
+
             kv_store.load_from_file_encrypted(&path, &recovered_dek).await?;
 
             if let Some(secret) = kv_store.get_secret("my_secret").await {

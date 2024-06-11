@@ -1,4 +1,3 @@
-use sharks::{Sharks, Share};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tokio::sync::RwLock;
@@ -88,15 +87,4 @@ pub fn decrypt_data(key: &[u8], iv: &[u8], ciphertext: &[u8]) -> Vec<u8> {
     let nonce = XNonce::from_slice(iv);
     let plaintext = cipher.decrypt(nonce, ciphertext).expect("decryption failure!");
     plaintext
-}
-
-pub fn split_dek(dek: &[u8]) -> Vec<Share> {
-    let sharks = Sharks(3);
-    let dealer = sharks.dealer(dek);
-    dealer.take(5).collect()
-}
-
-pub fn reconstruct_dek(shares: Vec<Share>) -> Vec<u8> {
-    let sharks = Sharks(3);
-    sharks.recover(&shares).expect("Failed to recover DEK")
 }
