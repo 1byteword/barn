@@ -59,16 +59,6 @@ enum Command {
     },
 }
 
-fn store_share(id: String, share: Vec<u8>) {
-    let mut shares_map = DEK_SHARES.lock().unwrap();
-    shares_map.entry(id).or_insert_with(Vec::new).push(share);
-}
-
-fn retrieve_shares(id: String) -> Option<Vec<Vec<u8>>> {
-    let shares_map = DEK_SHARES.lock().unwrap();
-    shares_map.get(&id).cloned()
-}
-
 fn get_or_create_user_id() -> Uuid {
     if let Ok(contents) = fs::read_to_string(USER_ID_FILE) {
         if let Ok(uuid) = Uuid::parse_str(contents.trim()) {
