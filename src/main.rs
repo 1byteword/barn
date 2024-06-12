@@ -1,6 +1,5 @@
 mod handlers;
 mod models;
-mod storage;
 mod encryption;
 mod access_control;
 mod kv_silo;
@@ -11,7 +10,6 @@ use std::sync::Mutex;
 use handlers::{store, load, AppState};
 use log::info;
 use clap::{Parser, Subcommand};
-use storage::{ensure_dir_exists};
 use encryption::{generate_key, encrypt, decrypt};
 use access_control::AccessControl;
 use uuid::Uuid;
@@ -79,7 +77,6 @@ async fn main() -> std::io::Result<()> {
 
     let args = Args::parse();
     let base_dir = "secure_data";
-    ensure_dir_exists(&base_dir).unwrap();
 
     let user_id = get_or_create_user_id();
     let key = get_or_create_key();
@@ -106,7 +103,23 @@ async fn main() -> std::io::Result<()> {
             .await
         }
 
-        Command::Store { data } => {
+        Command::Store { data: _ } => {
+            let mut k = String::new();
+            println!("Enter your key: ");
+            std::io::stdin().read_line(&mut k).unwrap();
+            println!("Enter this key's value: ");
+            let mut v = String::new();
+            std::io::stdin().read_line(&mut v).unwrap();
+
+            let data = vec![k, v];
+
+            let _dek = generate_key();
+
+
+
+
+
+
             let data_str = data.join(" ");
             let mut data_bytes = data_str.as_bytes().to_vec();
             data_bytes.resize(DATA_SIZE, 0);
