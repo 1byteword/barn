@@ -36,3 +36,4 @@ node_modules/
 # any files resulting from local testing
 *.txt
 *.bin
+/data/
