@@ -41,33 +41,20 @@ impl KVStore {
         secrets.get(key).cloned()
     }
 
-    pub async fn save_to_file_encrypted(&self, filename: &str, master_key: &[u8]) -> std::io::Result<()> {
-        let secrets = self.secrets.read().await;
-        let persisted_secrets = PersistedSecrets {
-            secrets: secrets.clone(),
-        };
-        let data = serde_json::to_vec(&persisted_secrets)?;
-        let (iv, encrypted_data) = encrypt_data(master_key, &data);
+    pub async fn save_to_file_encrypted(&self, filename: &str, encrypted_data: &[u8], nonce: &[u8]) -> std::io::Result<()> {
         let mut file = File::create(filename)?;
-        file.write_all(&iv)?;
-        file.write_all(&encrypted_data)?;
+        file.write_all(nonce)?;
+        file.write_all(encrypted_data)?;
         Ok(())
-    }
+    }    
 
-    pub async fn load_from_file_encrypted(&self, filename: &str, master_key: &[u8]) -> std::io::Result<()> {
-        let mut file = match File::open(filename) {
-            Ok(file) => file,
-            Err(_) => return Ok(()),
-        };
-        let mut iv = vec![0u8; 24];
-        file.read_exact(&mut iv)?;
+    pub async fn load_from_file_encrypted(&self, filename: &str) -> std::io::Result<(Vec<u8>, Vec<u8>)> {
+        let mut file = File::open(filename)?;
+        let mut nonce = vec![0u8; 24];
+        file.read_exact(&mut nonce)?;
         let mut encrypted_data = Vec::new();
         file.read_to_end(&mut encrypted_data)?;
-        let data = decrypt_data(master_key, &iv, &encrypted_data);
-        let persisted_secrets: PersistedSecrets = serde_json::from_slice(&data)?;
-        let mut secrets = self.secrets.write().await;
-        *secrets = persisted_secrets.secrets;
-        Ok(())
+        Ok((nonce, encrypted_data))
     }
 }
 
