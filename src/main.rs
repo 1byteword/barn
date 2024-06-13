@@ -1,10 +1,11 @@
-use actix_web::{web, App, HttpServer, HttpResponse, post, Responder};
+use actix_web::{web, App, HttpServer, HttpResponse, Responder, post};
 use chacha20poly1305::{XChaCha20Poly1305, Key, XNonce, aead::{Aead, KeyInit}};
-use rand::RngCore;
 use rand::rngs::OsRng;
+use rand::RngCore;
 use serde::{Deserialize, Serialize};
-use std::sync::{Mutex, Arc};
-use std::collections::HashMap;
+use std::sync::Arc;
+use std::fs::OpenOptions;
+use std::io::Write;
 
 #[derive(Serialize, Deserialize)]
 struct StoreRequest {
@@ -12,10 +13,8 @@ struct StoreRequest {
     value: String,
 }
 
-#[derive(Clone)]
 struct AppState {
     encryptor: XChaCha20Poly1305,
-    store: Arc<Mutex<HashMap<String, Vec<u8>>>>,
 }
 
 #[post("/store")]
@@ -29,23 +28,29 @@ async fn store(data: web::Json<StoreRequest>, state: web::Data<AppState>) -> imp
         Err(_) => return HttpResponse::InternalServerError().finish(),
     };
 
-    let mut store = state.store.lock().unwrap();
-    store.insert(data.key.clone(), ciphertext);
+    let file_path = format!("data/{}.dat", data.key);
+    let mut file = match OpenOptions::new().write(true).create(true).open(&file_path) {
+        Ok(file) => file,
+        Err(_) => return HttpResponse::InternalServerError().finish(),
+    };
+
+    if file.write_all(&nonce).is_err() || file.write_all(&ciphertext).is_err() {
+        return HttpResponse::InternalServerError().finish();
+    }
 
     HttpResponse::Ok().body("Key-value pair stored successfully")
 }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let key = Key::from_slice(&[0; 32]);
+    let key = Key::from_slice(&[0; 32]); // Use a fixed key for simplicity
     let encryptor = XChaCha20Poly1305::new(&key);
 
-    let data_store = Arc::new(Mutex::new(HashMap::<String, Vec<u8>>::new()));
-    let state = AppState { encryptor, store: data_store };
+    let state = web::Data::new(AppState { encryptor });
 
     HttpServer::new(move || {
         App::new()
-            .app_data(web::Data::new(state.clone()))
+            .app_data(state.clone())  // Correct usage of Data's internal Arc for state management
             .service(store)
     })
     .bind("127.0.0.1:8000")?
