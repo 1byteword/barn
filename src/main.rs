@@ -87,7 +87,7 @@ async fn main() -> std::io::Result<()> {
 
     HttpServer::new(move || {
         App::new()
-            .wrap(Logger::default())  // Correct usage of Logger in Actix-web
+            .wrap(Logger::default())
             .app_data(state.clone())
             .service(store)
             .service(load)
