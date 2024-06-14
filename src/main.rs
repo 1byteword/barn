@@ -3,7 +3,7 @@ use chacha20poly1305::{XChaCha20Poly1305, Key, XNonce, aead::{Aead, KeyInit}};
 use rand::rngs::OsRng;
 use rand::RngCore;
 use serde::{Deserialize, Serialize};
-use std::fs::OpenOptions;
+use std::fs::{self, OpenOptions};
 use std::io::{Read, Write};
 
 #[derive(Serialize, Deserialize)]
@@ -18,6 +18,9 @@ struct AppState {
 
 #[post("/store")]
 async fn store(data: web::Json<StoreRequest>, state: web::Data<AppState>) -> impl Responder {
+    let data_dir = "data";
+    fs::create_dir_all(data_dir).expect("Failed to create data directory");
+
     let mut nonce = vec![0u8; 24];
     OsRng.fill_bytes(&mut nonce);
     let nonce = XNonce::from_slice(&nonce);
@@ -27,7 +30,7 @@ async fn store(data: web::Json<StoreRequest>, state: web::Data<AppState>) -> imp
         Err(_) => return HttpResponse::InternalServerError().finish(),
     };
 
-    let file_path = format!("data/{}.dat", data.key);
+    let file_path = format!("{}/{}.dat", data_dir, data.key);
     let mut file = match OpenOptions::new().write(true).create(true).open(&file_path) {
         Ok(file) => file,
         Err(_) => return HttpResponse::InternalServerError().finish(),
@@ -47,7 +50,10 @@ struct LoadRequest {
 
 #[post("/load")]
 async fn load(data: web::Json<LoadRequest>, state: web::Data<AppState>) -> impl Responder {
-    let file_path = format!("data/{}.dat", data.key);
+    let data_dir = "data";
+    fs::create_dir_all(data_dir).expect("Failed to create data directory");
+
+    let file_path = format!("{}/{}.dat", data_dir, data.key);
     let mut file = match OpenOptions::new().read(true).open(&file_path) {
         Ok(file) => file,
         Err(_) => return HttpResponse::NotFound().body("File not found"),
