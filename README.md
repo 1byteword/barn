@@ -6,7 +6,7 @@
 
 ## About
 
-Barn is a CLI tool for managing tokenization and detokenization of data through a simple HTTP API server. It provides a convenient way to tokenize data and later retrieve the original data using unique tokens.
+Barn is a CLI tool that not only manages tokenization and detokenization of data but also securely encrypts and decrypts data using a robust cryptographic approach with the XChaCha20Poly1305 algorithm. This Rust-based HTTP API server offers an effective way to encrypt data and securely store it, allowing for the retrieval of the original data using unique keys.
 
 ## Installation
 
@@ -31,60 +31,62 @@ You can install Barn using Homebrew. Follow these steps:
 To start the Barn server, run:
 ```sh
 ./barn serve --address 127.0.0.1:8000
+
+### Encrypt and Store Data
+
+To securely store data with encryption, use the following curl command:
+
+```bash
+curl -X POST http://127.0.0.1:8000/store -H 'Content-Type: application/json' -d '{\"key\": \"exampleKey\", \"value\": \"exampleValue\"}'
 ```
 
-### Tokenize Data
+This command encrypts the value and stores it under the specified key.
 
-To tokenize data, run:
-```sh
-./barn tokenize --data item1
-```
-### Detokenize Data
+### Decrypt and Retrieve Data
 
-To detokenize data, run:
-```sh
-./barn detokenize --data field1
+To retrieve and decrypt data, use the following curl command:
+
+```bash
+curl -X POST http://127.0.0.1:8000/load -H 'Content-Type: application/json' -d '{\"key\": \"exampleKey\"}'
 ```
-Replace the items and fields above with your actual data and fields.
+
+This retrieves the encrypted data using the specified key and decrypts it.
 
 ### Example Workflow
 
 1. **Start the Server**:
-    ```sh
+    ```bash
     ./barn serve --address 127.0.0.1:8000
     ```
 
-2. **Tokenize Data**:
-    ```sh
-    ./barn tokenize --data item1
+2. **Encrypt and Store Data**:
+    ```bash
+    curl -X POST http://127.0.0.1:8000/store -H 'Content-Type: application/json' -d '{"key": "exampleKey", "value": "exampleValue"}'
     ```
 
     Example response:
     ```json
     {
-      "field1": "item1"
+      "message": "Key-value pair stored successfully"
     }
     ```
 
-3. **Detokenize Data**:
-    ```sh
-    ./barn detokenize --data field1
+3. **Decrypt and Retrieve Data**:
+    ```bash
+    curl -X POST http://127.0.0.1:8000/load -H 'Content-Type: application/json' -d '{"key": "exampleKey"}'
     ```
 
     Example response:
     ```json
-    [
-      "item1"
-    ]
+    {
+      "value": "exampleValue"
+    }
     ```
 
 ### Viewing Logs
 
-To view detailed logs of tokenization and detokenization activities, set the `RUST_LOG` environment variable to `info` before starting the server:
+For detailed logs of server activities, including encryption and decryption operations, set the `RUST_LOG` environment variable to `info` before starting the server:
 
-```sh
+```bash
 RUST_LOG=info ./barn serve --address 127.0.0.1:8000
 ```
-
-# License
-This project is licensed under the MIT License.
