@@ -6,7 +6,9 @@
 
 ## About
 
-Barn is a sophisticated command-line interface (CLI) tool that excels in managing, tokenizing, and securely encrypting data through a RESTful API implemented in Rust. Barn offers an advanced cryptographic solution — more sophisticated and intuitive than current industry leaders — that ensures data confidentiality and integrity. This tool was developed to offer a dependable alternative in the wake of significant industry consolidations, such as IBM's acquisition of HashiCorp, reinforcing the necessity for resilient and independent data security solutions. Barn enables users to encrypt data and securely store it, facilitating the retrieval of the original data using unique keys, thus ensuring the security of data across platforms. Welcome to the Barnyard.
+Barn is a sophisticated command-line interface (CLI) tool that excels in managing, tokenizing, and securely encrypting data through a RESTful API implemented in Rust. Barn offers an advanced cryptographic solution — more sophisticated and intuitive than current industry leaders — that ensures data confidentiality and integrity.
+
+This tool was developed to offer a dependable alternative in the wake of significant industry consolidations, such as IBM's acquisition of HashiCorp, reinforcing the necessity for resilient and independent data security solutions. Barn enables users to encrypt data and securely store it, facilitating the retrieval of the original data using unique keys, thus ensuring the security of data across platforms. Welcome to the Barnyard.
 
 ## Installation
 
