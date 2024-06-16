@@ -91,6 +91,21 @@ async fn main() -> std::io::Result<()> {
 
     let state = web::Data::new(AppState { encryptor });
 
+    
+
+    let logo = r#"
+      ________  ________  ________  ________      
+     |\   __  \|\   __  \|\   __  \|\   ___  \    
+     \ \  \|\ /\ \  \|\  \ \  \|\  \ \  \\ \  \   
+      \ \   __  \ \   __  \ \   _  _\ \  \\ \  \  
+       \ \  \|\  \ \  \ \  \ \  \\  \\ \  \\ \  \ 
+        \ \_______\ \__\ \__\ \__\\ _\\ \__\\ \__\
+         \|_______|\|__|\|__|\|__|\|__|\|__| \|__|                                      
+    "#;
+
+    println!("{}", logo);
+    println!("Welcome to the Barnyard Key-Value Store.");
+    println!("Starting Barn API server on http://127.0.0.1:8000");
     HttpServer::new(move || {
         App::new()
             .wrap(Logger::default())
