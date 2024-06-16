@@ -1,0 +1,199 @@
+End-to-end workflow for adding, encrypting, and storing key-value (KV) pairs using a similar storage philosophy to Vault. We'll use the following technologies and algorithms:
+
+Encryption Algorithm: XChaCha20-Poly1305
+Key Derivation Function: HKDF (HMAC-based Key Derivation Function)
+Master Key: Shamir's Secret Sharing
+Serialization Format: JSON
+
+Here's the detailed workflow:
+
+Adding a KV Pair:
+
+Receive a new KV pair (key and value) from the user or application.
+Validate and sanitize the input to ensure it meets the required format and constraints.
+Serialize the KV pair into a JSON object: {"key": "example_key", "value": "example_value"}.
+
+
+Encryption:
+
+Generate a random 256-bit data encryption key (DEK) using a secure random number generator.
+Use HKDF with the DEK and a unique KV pair identifier (e.g., a counter or UUID) to derive a 256-bit encryption key (EK) and a 192-bit nonce (IV).
+
+HKDF(DEK, KV_pair_identifier) -> (EK, IV)
+
+
+Encrypt the serialized JSON object using XChaCha20-Poly1305 with the derived EK and IV.
+
+XChaCha20-Poly1305(JSON_object, EK, IV) -> encrypted_data
+
+
+Encode the encrypted data using base64 to obtain a string representation.
+
+
+Master Key and DEK Encryption:
+
+Generate a master key using Shamir's Secret Sharing algorithm.
+
+Split the master key into n shares, with a threshold of k shares required to reconstruct the key.
+Distribute the shares securely among multiple Vault nodes or unseal keys.
+
+
+Encrypt the DEK using the master key with an authenticated encryption algorithm like AES-256-GCM.
+
+AES-256-GCM(DEK, master_key) -> encrypted_DEK
+
+
+Encode the encrypted DEK using base64.
+
+
+Storage:
+
+Define a storage directory for encrypted secrets, e.g., /var/lib/vault-competitor/secrets/.
+Create a subdirectory within the storage directory based on the first few characters of the KV pair's key. This helps distribute the files evenly and improves performance.
+
+For example, if the key is "example_key", create a subdirectory like /var/lib/vault-competitor/secrets/ex/.
+
+
+Generate a unique filename for the encrypted KV pair using a deterministic naming scheme, e.g., <key>_<timestamp>.
+Write the base64-encoded encrypted data to the file in the corresponding subdirectory.
+
+
+Metadata Storage:
+
+Store the necessary metadata for each encrypted KV pair, including:
+
+Key: The original key of the KV pair.
+Encrypted DEK: The base64-encoded encrypted DEK.
+KV Pair Identifier: The unique identifier used during encryption.
+Timestamp: The timestamp indicating when the KV pair was added.
+
+
+Create a separate metadata file or database to store the metadata, indexed by the KV pair's key.
+
+
+Retrieving a KV Pair:
+
+Receive a request to retrieve the value for a specific key.
+Look up the metadata for the given key in the metadata file or database.
+Retrieve the encrypted DEK and KV pair identifier from the metadata.
+Reconstruct the master key using the required number of Shamir's Secret Sharing shares.
+Decrypt the encrypted DEK using the reconstructed master key and the AES-256-GCM algorithm.
+Locate the encrypted KV pair file in the storage directory based on the key and subdirectory structure.
+Read the encrypted data from the file and decode it from base64.
+Use HKDF with the decrypted DEK and the KV pair identifier to derive the EK and IV.
+Decrypt the encrypted data using XChaCha20-Poly1305 with the derived EK and IV.
+Deserialize the decrypted JSON object to obtain the original value.
+Return the value to the requesting user or application.
+
+
+
+Shamir's secret sharing for master key
+
+------------------------------------------------------------------------------------------------------------------------------------
+
+Logging (review)
+
+Adding a KV Pair:
+
+Log the timestamp when the KV pair was received.
+Log the user or application that initiated the request to add the KV pair.
+Log the key of the KV pair being added (without logging the actual value).
+Log the result of the input validation and sanitization process (success or failure).
+Log the unique identifier generated for the KV pair.
+
+
+Encryption:
+
+Log the timestamp when the encryption process started and completed.
+Log the unique identifier of the KV pair being encrypted.
+Log the success or failure of the encryption process.
+Log the derived encryption key (EK) and nonce (IV) in a secure manner (e.g., using a separate secure logging system or encrypting the logs).
+Log the base64-encoded encrypted data size.
+
+
+Master Key and DEK Encryption:
+
+Log the timestamp when the master key was generated or retrieved.
+Log the number of shares (n) and the threshold (k) used in Shamir's Secret Sharing.
+Log the success or failure of the master key generation and sharing process.
+Log the timestamp when the DEK encryption process started and completed.
+Log the unique identifier of the KV pair associated with the DEK.
+Log the success or failure of the DEK encryption process.
+Log the base64-encoded encrypted DEK size.
+
+
+Storage:
+
+Log the timestamp when the storage operation started and completed.
+Log the unique identifier of the KV pair being stored.
+Log the storage directory path and subdirectory where the encrypted KV pair is being stored.
+Log the generated filename for the encrypted KV pair.
+Log the success or failure of the storage operation.
+
+
+Metadata Storage:
+
+Log the timestamp when the metadata storage operation started and completed.
+Log the key of the KV pair associated with the metadata.
+Log the success or failure of the metadata storage operation.
+Log the metadata file path or database location where the metadata is being stored.
+
+
+Retrieving a KV Pair:
+
+Log the timestamp when the retrieval request was received.
+Log the user or application that initiated the retrieval request.
+Log the key of the KV pair being retrieved.
+Log the success or failure of the metadata lookup process.
+Log the timestamp when the master key reconstruction process started and completed.
+Log the success or failure of the master key reconstruction process.
+Log the timestamp when the DEK decryption process started and completed.
+Log the success or failure of the DEK decryption process.
+Log the timestamp when the encrypted KV pair retrieval started and completed.
+Log the success or failure of the encrypted KV pair retrieval.
+Log the timestamp when the decryption process started and completed.
+Log the success or failure of the decryption process.
+Log the timestamp when the value was returned to the requesting user or application.
+
+
+Access Control:
+
+Log all access control decisions, including granted and denied access attempts.
+Log the user or application making the access request.
+Log the timestamp of each access request.
+Log the resource (e.g., KV pair key) being accessed.
+
+
+Error Handling:
+
+Log all error events, including the timestamp, error code, error message, and relevant contextual information.
+Log the user or application associated with the error event.
+Log the specific operation or step where the error occurred.
+
+
+System Events:
+
+Log system startup and shutdown events.
+Log any configuration changes made to the system.
+Log the timestamp and user or application responsible for each system event.
+
+
+Audit Trails:
+
+Maintain a comprehensive audit trail of all activities and events within the system.
+Include timestamps, user or application details, and specific actions performed.
+Ensure the audit trail is tamper-evident and protected from unauthorized modifications.
+
+
+Security Events:
+
+Log all security-related events, such as authentication attempts (successful and failed), authorization failures, and suspicious activities.
+Log the timestamp, user or application, and specific event details.
+Monitor and analyze security events to detect and respond to potential security incidents.
+
+
+Data Retention and Deletion:
+
+Log the timestamp when a KV pair is marked for deletion or expiration.
+Log the actual deletion or expiration of the KV pair, including the timestamp and relevant metadata.
+Ensure that data retention policies are enforced and logged accordingly.
