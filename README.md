@@ -1,5 +1,3 @@
-# Barn
-                                               
 <p align="center">
   <img src="misc/night.png" alt="Barn Logo" />
 </p>
