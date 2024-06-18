@@ -38,7 +38,7 @@ To start the Barn server, run:
 To securely store data with encryption, use the following curl command:
 
 ```bash
-curl -X POST http://127.0.0.1:8000/store -H 'Content-Type: application/json' -d '{\"key\": \"exampleKey\", \"value\": \"exampleValue\"}'
+curl -X POST http://127.0.0.1:8000/store -H 'Content-Type: application/json' -d '{"key": "exampleKey", "value": "exampleValue"}'
 ```
 
 This command encrypts the value and stores it under the specified key.
@@ -48,7 +48,7 @@ This command encrypts the value and stores it under the specified key.
 To retrieve and decrypt data, use the following curl command:
 
 ```bash
-curl -X POST http://127.0.0.1:8000/load -H 'Content-Type: application/json' -d '{\"key\": \"exampleKey\"}'
+curl -X POST http://127.0.0.1:8000/load -H 'Content-Type: application/json' -d '{"key": "exampleKey"}'
 ```
 
 This retrieves the encrypted data using the specified key and decrypts it.
