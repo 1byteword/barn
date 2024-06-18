@@ -30,7 +30,7 @@ You can install Barn using Homebrew. Follow these steps:
 
 To start the Barn server, run:
 ```sh
-./barn serve --address 127.0.0.1:8000
+barn serve --address 127.0.0.1:8000
 ```
 
 ### Encrypt and Store Data
@@ -57,7 +57,7 @@ This retrieves the encrypted data using the specified key and decrypts it.
 
 1. **Start the Server**:
     ```bash
-    ./barn serve --address 127.0.0.1:8000
+    barn serve --address 127.0.0.1:8000
     ```
 
 2. **Encrypt and Store Data**:
@@ -89,5 +89,5 @@ This retrieves the encrypted data using the specified key and decrypts it.
 For detailed logs of server activities, including encryption and decryption operations, set the `RUST_LOG` environment variable to `info` before starting the server:
 
 ```bash
-RUST_LOG=info ./barn serve --address 127.0.0.1:8000
+RUST_LOG=info barn serve --address 127.0.0.1:8000
 ```
