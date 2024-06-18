@@ -6,8 +6,8 @@ use serde::{Deserialize, Serialize};
 use std::fs::{self, OpenOptions};
 use std::io::{Read, Write};
 
-use aws_config;
-use aws_sdk_s3::Client;
+//use aws_config;
+//use aws_sdk_s3::Client;
 
 
 #[derive(Serialize, Deserialize)]
@@ -18,7 +18,7 @@ struct StoreRequest {
 
 struct AppState {
     encryptor: XChaCha20Poly1305,
-    s3_bucket: Option<String>,
+    //s3_bucket: Option<String>,
 }
 
 #[post("/store")]

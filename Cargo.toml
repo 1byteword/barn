@@ -26,6 +26,3 @@ num-traits = "0.2.19"
 shamirsecretsharing="0.1.5"
 getrandom = "0.2"
 generic-array = "0.14.4"
-
-aws-config = "0.50"
-aws-sdk-s3 = "0.18"
