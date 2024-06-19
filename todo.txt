@@ -198,11 +198,18 @@ Log the timestamp when a KV pair is marked for deletion or expiration.
 Log the actual deletion or expiration of the KV pair, including the timestamp and relevant metadata.
 Ensure that data retention policies are enforced and logged accordingly.
 
+------------------------------------------------------------------------------------------------------------------------------------
+Access Control
+UUID, RBAC
+authn/authz services
+etcd
 
 ------------------------------------------------------------------------------------------------------------------------------------
 Distributed Key-Value Store
 
-Might be something like this:
+etcd? Used at Apple
+
+Or might be something like this:
 https://github.com/geohot/minikeyvalue
 
 Will figure out after implementing Raft Consensus Protocol:
