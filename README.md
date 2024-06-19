@@ -24,8 +24,6 @@ You can install Barn using Homebrew. Follow these steps:
 
 ## Usage
 
-<img src="misc/home.png" alt="Barnyard Home" />
-
 ### Start the Server
 
 To start the Barn server, run:
@@ -91,3 +89,9 @@ For detailed logs of server activities, including encryption and decryption oper
 ```bash
 RUST_LOG=info barn serve --address 127.0.0.1:8000
 ```
+
+### Barn UI
+
+Available at https://localhost:8001
+
+<img src="misc/home.png" alt="Barnyard Home" />
