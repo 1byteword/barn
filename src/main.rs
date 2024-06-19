@@ -2,6 +2,8 @@ mod endpoints;
 
 use actix_web::{web, App, HttpServer, middleware::Logger};
 use chacha20poly1305::{XChaCha20Poly1305, Key, KeyInit};
+use rand::rngs::OsRng;
+use rand::RngCore;
 
 struct AppState {
     encryptor: XChaCha20Poly1305,
@@ -12,7 +14,10 @@ async fn main() -> std::io::Result<()> {
     std::env::set_var("RUST_LOG", "actix_web=info");
     env_logger::init();
 
-    let key = Key::from_slice(&[0; 32]);
+    let mut key_bytes = [0u8; 32];
+    OsRng.fill_bytes(&mut key_bytes);
+    let key = Key::from_slice(&key_bytes);
+
     let encryptor = XChaCha20Poly1305::new(&key);
 
     let state = web::Data::new(AppState { encryptor });

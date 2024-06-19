@@ -43,6 +43,22 @@ async fn store(data: web::Json<StoreRequest>, state: web::Data<AppState>) -> imp
 
 
 
+
+
+
+
+
+
+//////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
 #[derive(Serialize, Deserialize)]
 pub struct LoadRequest {
     pub key: String,
