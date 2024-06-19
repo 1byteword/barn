@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="misc/logo2.png" alt="Barn Logo" />
+  <img src="misc/logo2.png" alt="Barn Logo" width="75%"/>
 </p>
 
 ## About
