@@ -96,6 +96,6 @@ Run the following command inside the /my-react-app directory.
 ```
 npm start
 ```
-Available at https://localhost:8001
+The following UI will be available at https://localhost:8001
 
 <img src="misc/home.png" alt="Barnyard Home" />
