@@ -197,3 +197,19 @@ Data Retention and Deletion:
 Log the timestamp when a KV pair is marked for deletion or expiration.
 Log the actual deletion or expiration of the KV pair, including the timestamp and relevant metadata.
 Ensure that data retention policies are enforced and logged accordingly.
+
+
+------------------------------------------------------------------------------------------------------------------------------------
+Distributed Key-Value Store
+
+Might be something like this:
+https://github.com/geohot/minikeyvalue
+
+Will figure out after implementing Raft Consensus Protocol:
+http://nil.csail.mit.edu/6.824/2020/papers/raft-extended.pdf
+
+Consul GH for reference:
+https://github.com/hashicorp/consul
+
+MIT Distributed Systems Course
+http://nil.csail.mit.edu/6.824/2020/schedule.html
