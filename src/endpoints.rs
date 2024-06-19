@@ -126,7 +126,7 @@ async fn generate_key() -> impl Responder {
     let hex_key = hex::encode(key);
 
     // return the hex key as a response
-    HttpResponse::Ok().body(hex_key)
+    HttpResponse::Ok().body(format!("Generated key: {}", hex_key))
 }
 
 
@@ -147,5 +147,8 @@ async fn generate_key() -> impl Responder {
 
 #[post("/login")]
 async fn login() -> impl Responder {
-    HttpResponse::Ok().body("Login endpoint")
+    let key_bytes = match hex::decode(&hex_key.0) {
+        Ok(bytes) => bytes,
+        Err(_) => return HttpResponse::BadRequest().body("Invalid key format.")
+    }
 }
