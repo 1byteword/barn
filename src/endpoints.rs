@@ -145,10 +145,10 @@ async fn generate_key() -> impl Responder {
 
 
 
-#[post("/login")]
-async fn login() -> impl Responder {
-    let key_bytes = match hex::decode(&hex_key.0) {
-        Ok(bytes) => bytes,
-        Err(_) => return HttpResponse::BadRequest().body("Invalid key format.")
-    }
-}
+// #[post("/login")]
+// async fn login() -> impl Responder {
+//     let key_bytes = match hex::decode(&hex_key.0) {
+//         Ok(bytes) => bytes;
+//         Err(_) => return HttpResponse::BadRequest().body("Invalid key format.");
+//     }
+// }
