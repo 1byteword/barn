@@ -9,9 +9,9 @@ Detailed workflow:
 
 Adding a KV Pair:
 
-Receive a new KV pair (key and value) from the user or application.
-Validate and sanitize the input to ensure it meets the required format and constraints.
-Serialize the KV pair into a JSON object: {"key": "example_key", "value": "example_value"}.
+[DONE] Receive a new KV pair (key and value) from the user or application.
+[DONE] Validate and sanitize the input to ensure it meets the required format and constraints.
+[DONE] Serialize the KV pair into a JSON object: {"key": "example_key", "value": "example_value"}.
 
 
 Encryption:
@@ -28,6 +28,9 @@ XChaCha20-Poly1305(JSON_object, EK, IV) -> encrypted_data
 
 
 Encode the encrypted data using base64 to obtain a string representation.
+
+
+Next part is for production only, dev instances should simply login using a root token. Production grade access is only granted via key shares.
 
 
 Master Key and DEK Encryption:
