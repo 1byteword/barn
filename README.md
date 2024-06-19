@@ -2,6 +2,8 @@
   <img src="misc/logo2.png" alt="Barn Logo" width="70%"/>
 </p>
 
+
+
 ## About
 
 Barn is a sophisticated command-line interface (CLI) tool that excels in managing, tokenizing, and securely encrypting data through a RESTful API implemented in Rust. Barn offers an advanced cryptographic solution — more sophisticated and intuitive than current industry leaders — that ensures data confidentiality and integrity.
