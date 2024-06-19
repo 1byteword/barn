@@ -44,6 +44,7 @@ async fn main() -> std::io::Result<()> {
             .app_data(state.clone())
             .service(endpoints::store)
             .service(endpoints::load)
+            .service(endpoints::generate_key)
     })
     .bind("127.0.0.1:8000")?
     .run()

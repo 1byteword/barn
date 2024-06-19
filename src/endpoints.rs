@@ -1,10 +1,12 @@
 use actix_web::{web, HttpResponse, Responder, post};
-use chacha20poly1305::{XNonce, aead::Aead};
+use chacha20poly1305::{XNonce, Key, aead::Aead};
 use serde::{Deserialize, Serialize};
 use std::fs::{self, OpenOptions};
 use std::io::{Read, Write};
 use rand::rngs::OsRng;
 use rand::RngCore;
+
+use sodiumoxide::hex;
 
 use crate::AppState;
 
@@ -95,4 +97,55 @@ async fn load(data: web::Json<LoadRequest>, state: web::Data<AppState>) -> impl 
         Ok(text) => HttpResponse::Ok().body(text),
         Err(_) => HttpResponse::InternalServerError().body("Failed to convert plaintext to string"),
     }
+}
+
+
+
+
+
+
+
+
+
+//////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+#[post("/generate_key")]
+async fn generate_key() -> impl Responder {
+    let mut key_bytes = [0u8; 32];
+    OsRng.fill_bytes(&mut key_bytes);
+    let key = Key::from_slice(&key_bytes);
+
+    // convert the key to hex so it's easier to print
+    let hex_key = hex::encode(key);
+
+    // return the hex key as a response
+    HttpResponse::Ok().body(hex_key)
+}
+
+
+
+
+
+
+
+
+//////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+#[post("/login")]
+async fn login() -> impl Responder {
+    HttpResponse::Ok().body("Login endpoint")
 }
