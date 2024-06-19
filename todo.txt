@@ -199,10 +199,11 @@ Log the actual deletion or expiration of the KV pair, including the timestamp an
 Ensure that data retention policies are enforced and logged accordingly.
 
 ------------------------------------------------------------------------------------------------------------------------------------
+
 Access Control
 UUID, RBAC
 authn/authz services
-etcd
+Flesh this out
 
 ------------------------------------------------------------------------------------------------------------------------------------
 Distributed Key-Value Store
