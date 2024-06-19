@@ -5,7 +5,7 @@ Key Derivation Function: HKDF (HMAC-based Key Derivation Function)
 Master Key: Shamir's Secret Sharing
 Serialization Format: JSON
 
-Here's the detailed workflow:
+Detailed workflow:
 
 Adding a KV Pair:
 
@@ -48,7 +48,7 @@ Encode the encrypted DEK using base64.
 
 Storage:
 
-Define a storage directory for encrypted secrets, e.g., /var/lib/vault-competitor/secrets/.
+Define a storage directory for encrypted secrets, e.g., /var/lib/barn/secrets/.
 Create a subdirectory within the storage directory based on the first few characters of the KV pair's key. This helps distribute the files evenly and improves performance.
 
 For example, if the key is "example_key", create a subdirectory like /var/lib/vault-competitor/secrets/ex/.
