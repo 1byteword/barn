@@ -28,7 +28,6 @@ jobs:
 
       # Install your linters here
 
-      - name: Run linters
-        uses: wearerequired/lint-action@v2
-        with:
-          # Enable your linters here
+      - name: rust-clippy-check
+        uses: actions-rs/clippy-check@v1.0.7
+            
