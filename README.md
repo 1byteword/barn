@@ -93,7 +93,8 @@ RUST_LOG=info barn serve --address 127.0.0.1:8000
 ### Barn UI
 
 Run the following command inside the /my-react-app directory.
-```npm start
+```
+npm start
 ```
 Available at https://localhost:8001
 
